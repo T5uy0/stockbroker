@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Assets\Schemas;
 
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Schema;
@@ -12,13 +13,28 @@ class AssetForm
     {
         return $schema
             ->components([
-                TextInput::make('user_id')
-                    ->required()
-                    ->numeric(),
                 TextInput::make('name')
                     ->required(),
-                TextInput::make('type')
-                    ->required(),
+                Select::make('asset_type_id')
+                    ->label('Type')
+                    ->relationship('assetType', 'name')
+                    ->searchable()
+                    ->preload(),
+                Select::make('company_id')
+                    ->label('Entreprise')
+                    ->relationship('company', 'name') // relation Asset::company()
+                    ->searchable()
+                    ->preload()
+                    ->nullable()
+                    ->helperText('Entreprise qui détient ou émet l’actif.')
+                    ->createOptionForm([
+                        TextInput::make('name')->label('Nom')->required()->unique(Company::class, 'name'),
+                        TextInput::make('location')->label('Lieu'),
+                        TextInput::make('website_url')->label('Site web')->url()->prefix('https://'),
+                    ])
+                    ->createOptionUsing(function (array $data) {
+                        return Company::create($data)->getKey();
+                    }),
                 TextInput::make('currency')
                     ->required()
                     ->default('EUR'),
